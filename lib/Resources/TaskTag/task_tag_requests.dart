@@ -30,6 +30,28 @@ requestUpdateTaskTagByIdFormJson(TaskTagFetchParams? params) async {
 
   return 'Đã Update';
 }
+
+
+requestCreateTaskTagByIdFormJson(TaskTagFetchParams? params) async {
+  TaskTag taskTag;
+  final response = await client.post(Uri.parse("https://60ffcd75bca46600171cf51f.mockapi.io/Task"),body:TaskTagFactory.toJson(params!.body!));
+  if (response.statusCode > 201 ) {
+    throw FetchError(httpStatus: response.statusCode, message: response.body);
+  }
+  taskTag = TaskTagFactory.create(response.body);
+  await Future.delayed(Duration(seconds: 2));
+  final responseList = await client.get(Uri.parse("https://60ffcd75bca46600171cf51f.mockapi.io/ListTask/${params.body!.listTaskId}"));
+  var listTask = ListTaskFactory.create(responseList.body);
+  listTask.listTaskTag!.add(int.parse(taskTag.id!));
+  await Future.delayed(Duration(seconds: 2));
+  final updateList = await client.put(Uri.parse("https://60ffcd75bca46600171cf51f.mockapi.io/ListTask/${params.body!.listTaskId}"),body: ListTaskFactory.toJson(listTask));
+  if (updateList.statusCode != 200) {
+    throw FetchError(httpStatus: updateList.statusCode, message: updateList.body);
+  }
+  return taskTag;
+}
+
+
 requestDeleteTaskTagByIdFormJson(TaskTagFetchParams? params) async {
   String aCheck =jsonEncode(TaskTagFactory.toJson(params!.body!));
   final responseList = await client.get(Uri.parse("https://60ffcd75bca46600171cf51f.mockapi.io/ListTask/${params.body!.listTaskId}"));
